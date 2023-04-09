@@ -36,57 +36,59 @@
       function initSpeechRecognition() {
         if ('webkitSpeechRecognition' in window) {
           recognition = new webkitSpeechRecognition()
-          recognition.continuous = true
-          recognition.interimResults = true
-          recognition.lang = 'zh-CN'
-
-          recognition.onstart = function () {
-            isRecording = true
-            stopRecordingButton.disabled = false
-            startRecordingButton.disabled = true
-            resultParagraph.textContent = 'Listening...'
-          }
-
-          recognition.onresult = async function (event) {
-            let interim_transcript = ''
-            let final_transcript = ''
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                final_transcript += event.results[i][0].transcript
-              } else {
-                interim_transcript += event.results[i][0].transcript
-              }
-            }
-
-            if (final_transcript) {
-              resultParagraph.textContent = `You said: ${final_transcript}`
-              const targetText = inputText.value
-              if (final_transcript.trim() === targetText) {
-                resultParagraph.textContent += ' - Pronunciation is correct!'
-                speak(`You said: ${final_transcript}, 发音正确. `)
-              } else {
-                resultParagraph.textContent +=
-                  '- Pronunciation is incorrect. The Correct Pronunciation is: ' +
-                  targetText
-                speak(
-                  `You said: ${final_transcript}, 正确发音是，${targetText} `
-                )
-              }
-            }
-          }
-
-          recognition.onerror = function (event) {
-            console.error(event.error)
-          }
-
-          recognition.onend = function () {
-            isRecording = false
-            stopRecordingButton.disabled = true
-            startRecordingButton.disabled = false
-          }
+        } else if ('SpeechRecognition' in window) {
+          recognition = new SpeechRecognition()
         } else {
           console.error('Speech Recognition API not supported in this browser.')
+          return
+        }
+
+        recognition.continuous = true
+        recognition.interimResults = true
+        recognition.lang = 'zh-CN'
+
+        recognition.onstart = function () {
+          isRecording = true
+          stopRecordingButton.disabled = false
+          startRecordingButton.disabled = true
+          resultParagraph.textContent = 'Listening...'
+        }
+
+        recognition.onresult = async function (event) {
+          let interim_transcript = ''
+          let final_transcript = ''
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              final_transcript += event.results[i][0].transcript
+            } else {
+              interim_transcript += event.results[i][0].transcript
+            }
+          }
+
+          if (final_transcript) {
+            resultParagraph.textContent = `You said: ${final_transcript}`
+            const targetText = inputText.value
+            if (final_transcript.trim() === targetText) {
+              resultParagraph.textContent += ' - Pronunciation is correct!'
+              speak(`You said: ${final_transcript}, 发音正确. `)
+            } else {
+              resultParagraph.textContent +=
+                '- Pronunciation is incorrect. The Correct Pronunciation is: ' +
+                targetText
+              speak(`You said: ${final_transcript}, 正确发音是，${targetText} `)
+            }
+          }
+        }
+
+        recognition.onerror = function (event) {
+          console.error(event.error)
+        }
+
+        recognition.onend = function () {
+          isRecording = false
+          stopRecordingButton.disabled = true
+          startRecordingButton.disabled = false
         }
       }
 
