@@ -1,87 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chinese Pronunciation Checker</title>
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+  </head>
+  <body>
+    <h1>Chinese Pronunciation Checker</h1>
+    <p>Enter a word and press the button to check pronunciation:</p>
+    <input type="text" id="input-text" />
+    <button id="start-recording">Start Recording</button>
+    <button id="stop-recording" disabled>Stop Recording</button>
+    <p id="result"></p>
+    <script>
+      // Replace with your own Google API key
+      const apiKey = 'AIzaSyAp1oG-jthe4kNMS2-s5ji8iXH_vnPmiRQ'
 
-<head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Swan Lake Farms - Home</title>
- <link rel="stylesheet" href="styles.css">
+      const inputText = document.getElementById('input-text')
+      const startRecordingButton = document.getElementById('start-recording')
+      const stopRecordingButton = document.getElementById('stop-recording')
+      const resultParagraph = document.getElementById('result')
 
- <style>
-  body {
-   font-family: Arial, sans-serif;
-   margin: 0;
-   padding: 0;
-  }
+      let recognition
+      let isRecording = false
 
-  header {
-   background-color: #4CAF50;
-   text-align: center;
-   padding: 1rem 0;
-  }
+      function speak(text) {
+        responsiveVoice.speak(text, 'Chinese Female')
+        setTimeout(() => {
+          i = 1
+        }, 50)
+      }
 
-  header h1 {
-   color: white;
-   margin: 0;
-  }
+      function initSpeechRecognition() {
+        if ('webkitSpeechRecognition' in window) {
+          recognition = new webkitSpeechRecognition()
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.lang = 'zh-CN'
 
-  nav {
-   display: flex;
-   justify-content: space-around;
-   background-color: #3C8D2F;
-   padding: 1rem 0;
-  }
+          recognition.onstart = function () {
+            isRecording = true
+            stopRecordingButton.disabled = false
+            startRecordingButton.disabled = true
+            resultParagraph.textContent = 'Listening...'
+          }
 
-  nav a {
-   color: white;
-   text-decoration: none;
-   font-size: 1.2rem;
-  }
+          recognition.onresult = async function (event) {
+            let interim_transcript = ''
+            let final_transcript = ''
 
-  nav a:hover {
-   text-decoration: underline;
-  }
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                final_transcript += event.results[i][0].transcript
+              } else {
+                interim_transcript += event.results[i][0].transcript
+              }
+            }
 
-  main {
-   padding: 2rem;
-  }
+            if (final_transcript) {
+              resultParagraph.textContent = `You said: ${final_transcript}`
+              const targetText = inputText.value
+              if (final_transcript.trim() === targetText) {
+                resultParagraph.textContent += ' - Pronunciation is correct!'
+                speak(`You said: ${final_transcript}, 发音正确. `)
+              } else {
+                resultParagraph.textContent +=
+                  '- Pronunciation is incorrect. The Correct Pronunciation is: ' +
+                  targetText
+                speak(
+                  `You said: ${final_transcript}, 正确发音是，${targetText} `
+                )
+              }
+            }
+          }
 
-  footer {
-   background-color: #3C8D2F;
-   text-align: center;
-   padding: 1rem 0;
-   color: white;
-  }
- </style>
-</head>
+          recognition.onerror = function (event) {
+            console.error(event.error)
+          }
 
-<body>
- <header>
-  <h1>Swan Lake Farms</h1>
-  <nav>
-   <a href="index.html">Home</a>
-   <a href="about.html">About Us</a>
-   <a href="products.html">Our Products</a>
-   <a href="contact.html">Contact Us</a>
-  </nav>
- </header>
- <main>
-  <h2>Welcome to Swan Lake Farms</h2>
-  <p>At Swan Lake Farms, we are passionate about growing the finest quality Chinese vegetables. Our farm, located in the
-   heart of lush, fertile land, has been cultivating a diverse range of Chinese vegetables for over a decade. We take
-   pride in our sustainable farming practices and dedication to providing our customers with the freshest, most
-   nutritious produce available.</p>
+          recognition.onend = function () {
+            isRecording = false
+            stopRecordingButton.disabled = true
+            startRecordingButton.disabled = false
+          }
+        } else {
+          console.error('Speech Recognition API not supported in this browser.')
+        }
+      }
 
-  <p>Our selection of Chinese vegetables includes bok choy, napa cabbage, Chinese broccoli (gai lan), snow pea shoots,
-   Chinese eggplant, and many more. We are continuously expanding our offerings to meet the growing demand for diverse
-   and exotic vegetables.</p>
+      startRecordingButton.addEventListener('click', () => {
+        if (!isRecording) {
+          recognition.start()
+        }
+      })
 
-  <p>Explore our website to learn more about our farm, the vegetables we grow, and how you can enjoy the delightful
-   flavors of our Chinese vegetables in your own kitchen.</p>
- </main>
- <footer>
-  &copy; 2023 Swan Lake Farms. All rights reserved.
- </footer>
-</body>
+      stopRecordingButton.addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop()
+        }
+      })
 
+      initSpeechRecognition()
+    </script>
+  </body>
 </html>
